@@ -1,0 +1,11 @@
+*.txt
+*.o
+*.h5
+*.out
+__pycache__
+.venv
+
+
+C_Project/gendata
+C_Project/myknn
+
