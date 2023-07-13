@@ -1,5 +1,3 @@
-import pandas as pd
-import numpy as np
 from sklearn.preprocessing import StandardScaler
 import h5py
 import modules.utils.utils as ut

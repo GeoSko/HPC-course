@@ -1,6 +1,5 @@
 from modules.utils.utils import scaler_resuls
 from modules.parallel_scalers.parallelstandardscaler import ParStandardScaler
-import h5py
 import modules.utils.utils as ut
 
 

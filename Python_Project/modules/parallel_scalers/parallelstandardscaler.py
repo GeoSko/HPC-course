@@ -7,9 +7,18 @@ from concurrent.futures import ProcessPoolExecutor
 
 
 
-def work(data):
+def work(indeces):
+    start = indeces[0]
+    end = indeces[1]
+    data_file = indeces[2]
+    data_file = "./" + data_file
+    print(data_file)
+    hf = h5py.File(data_file, "r")
+    data = hf["data"]
+    partial_data = data[start:end]
     scaler = preprocessing.StandardScaler()
-    scaler.fit(data)
+    scaler.partial_fit(partial_data)
+
     return scaler
 
 __all__ = [
@@ -44,7 +53,8 @@ class ParStandardScaler(preprocessing.StandardScaler):
         data = hf["data"]
         scalers = []
         n = data.shape[0] # number of rows
-        batch_size = 5000000  # number of rows in each call to partial_fit
+        hf.close()
+        batch_size = 15000000  # number of rows in each call to partial_fit
         index = 0         # helper-var
         iterations = int(n / batch_size)
 
@@ -56,11 +66,15 @@ class ParStandardScaler(preprocessing.StandardScaler):
         #     index += batch_size
         #     scalers.append(scaler)
 
-        all_data = [data[start*batch_size:(start*batch_size)+batch_size] for start in range(iterations)]
+        # all_data = [data[start*batch_size:(start*batch_size)+batch_size] for start in range(iterations)]
+
+        indeces = [(start*batch_size,(start*batch_size)+batch_size, data_file) for start in range(iterations)]
+
+        print(indeces)
 
         # with ThreadPoolExecutor(max_workers=4) as executor:
-        with ProcessPoolExecutor(max_workers=4) as executor:
-            scalers = executor.map(work, all_data)
+        with ProcessPoolExecutor(max_workers=2) as executor:
+            scalers = executor.map(work, indeces)
             # scalers.append(scaler)
 
         # executor = ProcessPoolExecutor(max_workers=4)
@@ -84,8 +98,10 @@ class ParStandardScaler(preprocessing.StandardScaler):
         #     index += partial_size
         #     scalers.append(scaler)
         ###########
+        
         scalers = list(scalers)
-
+        print("HELLOOOOO")
+        print(scalers)
         remaining = n%batch_size
         if( remaining != 0):
             print(remaining)
