@@ -4,6 +4,7 @@
 *.out
 __pycache__
 .venv
+draft*
 
 
 C_Project/gendata
