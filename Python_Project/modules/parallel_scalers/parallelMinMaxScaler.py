@@ -1,6 +1,6 @@
 import pandas as pd
 from sklearn import preprocessing
-from modules.utils.utils_StandardScaler import reduce_scalers
+from modules.utils.utils_MinMaxScaler import reduce_scalers
 import h5py
 from mpi4py.futures import MPIPoolExecutor
 from concurrent.futures import ProcessPoolExecutor
@@ -15,13 +15,13 @@ def work(attriburs):
     hf = h5py.File(data_file, "r")
     data = hf["data"]
     partial_data = data[start:end]
-    scaler = preprocessing.StandardScaler()
+    scaler = preprocessing.MinMaxScaler()
     scaler.partial_fit(partial_data)
 
     return scaler
 
 __all__ = [
-    'ParStandardScaler'
+    'ParMinMaxScaler'
 ]
 
 
@@ -31,13 +31,13 @@ def _copy_attr(target_obj, source_obj):
         setattr(target_obj, attr, getattr(source_obj, attr))
 
 
-class ParStandardScaler(preprocessing.StandardScaler):
+class ParMinMaxScaler(preprocessing.MinMaxScaler):
     def __init__(self, copy=True, with_mean=True, with_std=True):
-        super(ParStandardScaler, self).__init__(
-            copy=copy, with_mean=with_mean, with_std=True)
+        super(ParMinMaxScaler, self).__init__(
+            copy=copy)
         
     def __str__(self) -> str:
-        attributes = '==> StandardScaler <==\n'
+        attributes = '==> MinMaxScaler <==\n'
         for attr in vars(self):
             attributes += "scaler.{} = {}\n".format(attr, getattr(self, attr))
         return str(attributes)
