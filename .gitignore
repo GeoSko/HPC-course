@@ -1,4 +1,4 @@
-*.txt
+C_Project/*.txt
 *.o
 *.h5
 *.out
