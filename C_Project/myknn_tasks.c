@@ -116,25 +116,28 @@ int main(int argc, char *argv[])
 // #endif
 
 	t0 = omp_get_wtime();
-	#pragma omp parallel for private(t0,t1,err) reduction(+:t_sum,sse,err_sum)
-	for (int i=0;i<QUERYELEMS;i++) {
-		// t0 = gettime();
-		
-		double yp = find_knn_value(xtest[i], PROBDIM, NNBS);
-		// t1 = gettime();
-
-		sse += (ytest[i]-yp)*(ytest[i]-yp);
-
-		//for (k = 0; k < PROBDIM; k++)
-		//	fprintf(fpout,"%.5f ", x[k]);
-
-		err = 100.0*fabs((yp-ytest[i])/ytest[i]);
-		//fprintf(fpout,"%.5f %.5f %.2f\n", y[i], yp, err);
-		err_sum += err;
-
+	#pragma omp parallel
+	{
+		#pragma omp single
+		{
+			for (int i=0;i<QUERYELEMS;i++) {
+				#pragma omp task firstprivate(i) private(err)
+				{
+					double yp = find_knn_value(xtest[i], PROBDIM, NNBS);
+					err = 100.0*fabs((yp-ytest[i])/ytest[i]);
+					#pragma omp atomic
+					sse += (ytest[i]-yp)*(ytest[i]-yp);
+					
+					#pragma omp atomic
+					err_sum += err;
+					
+				}
+			}
+		}
 	}
 	t1 = omp_get_wtime();
 	t_sum = (t1-t0);
+	
 	// fclose(fpin);
 	//fclose(fpout);
 
@@ -153,7 +156,7 @@ int main(int argc, char *argv[])
 	printf("Total time = %lf ms\n", t_sum);
 	// printf("Time for 1st query = %lf ms\n", t_first);
 	// printf("Time for 2..N queries = %lf ms\n", t_sum-t_first);
-	printf("Average time/query = %lf ms\n", (t_sum)/(QUERYELEMS));
+	printf("Average time/query = %lf ms\n", (t_sum-t_first)/(QUERYELEMS-1));
 
 	return 0;
 }
