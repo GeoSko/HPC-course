@@ -11,7 +11,7 @@ CFLAGS  = -DPROBDIM=$(DIM) -DNNBS=$(KNN) -DTRAINELEMS=$(TRA) -DQUERYELEMS=$(QUE)
 CFLAGS += -DSURROGATES -Wall -fopenmp
 LDFLAGS += -lm -fopenmp
 
-all: gendata myknn myknn_tasks
+all: gendata myknn myknn_tasks myknn_mpi
 
 gendata: gendata.o
 	gcc -o gendata gendata.o $(LDFLAGS)
@@ -31,7 +31,13 @@ myknn_tasks: myknn_tasks.o
 myknn_tasks.o: myknn_tasks.c func.c
 	gcc $(CFLAGS) -c myknn_tasks.c
 
+myknn_mpi: myknn_mpi.o
+	gcc -o myknn_mpi myknn_mpi.o $(LDFLAGS)
+
+myknn_mpi.o: myknn_mpi.c func.c
+	gcc $(CFLAGS) -c myknn_mpi.c
+
 clean:
-	rm -f myknn myknn_tasks *.o gendata
+	rm -f myknn myknn_tasks myknn_mpi *.o gendata
 
 	
