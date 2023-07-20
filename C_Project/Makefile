@@ -32,10 +32,10 @@ myknn_tasks.o: myknn_tasks.c func.c
 	gcc $(CFLAGS) -c myknn_tasks.c
 
 myknn_mpi: myknn_mpi.o
-	gcc -o myknn_mpi myknn_mpi.o $(LDFLAGS)
+	mpicc -o myknn_mpi myknn_mpi.o $(LDFLAGS)
 
 myknn_mpi.o: myknn_mpi.c func.c
-	gcc $(CFLAGS) -c myknn_mpi.c
+	mpicc $(CFLAGS) -c myknn_mpi.c
 
 clean:
 	rm -f myknn myknn_tasks myknn_mpi *.o gendata
