@@ -1,5 +1,5 @@
-from modules.parallel_scalers.parallelStandardScaler import ParMinMaxScaler
-from modules.parallel_scalers.parallelStandardScaler import ParStandardScaler
+from modules.parallel_scalers.parallelScalers import ParMinMaxScaler
+from modules.parallel_scalers.parallelScalers import ParStandardScaler
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import StandardScaler
 from matplotlib import pyplot as plt
@@ -69,8 +69,27 @@ plt.ylabel('time(s)')
 plt.suptitle('Parallel MinMax Scaler Fitting time')
 plt.legend()
 plt.show()
-plt.savefig('min_max.png')
+plt.savefig('min_max_time.png')
 plt.clf()
+
+
+first_elemet = min_max_parallel_times[0]
+
+min_max_speedup = [first_elemet/element for element in min_max_parallel_times]
+
+# plot speedup
+
+plt.plot(num_workers, min_max_speedup, "-o", label="Parallel speedup")
+plt.plot(num_workers, num_workers, "-o", label="Ideal speedup")
+plt.xticks(num_workers)
+plt.xlabel('#workers')
+plt.ylabel('time(s)')
+plt.suptitle('Parallel MinMax Scaler Fitting speedup')
+plt.legend()
+plt.show()
+plt.savefig('min_max_speedup.png')
+plt.clf()
+
 
 #########################################################################################################3
 
@@ -111,5 +130,23 @@ plt.ylabel('time(s)')
 plt.suptitle('Parallel Standard Scaler Fitting time')
 plt.legend()
 plt.show()
-plt.savefig('std.png')
+plt.savefig('std_time.png')
+plt.clf()
+
+
+first_elemet = std_parallel_times[0]
+
+std_speedup = [first_elemet/element for element in std_parallel_times]
+
+# plot speedup
+
+plt.plot(num_workers, std_speedup, "-o", label="Parallel speedup")
+plt.plot(num_workers, num_workers, "-o", label="Ideal speedup")
+plt.xticks(num_workers)
+plt.xlabel('#workers')
+plt.ylabel('time(s)')
+plt.suptitle('Parallel MinMax Scaler Fitting speedup')
+plt.legend()
+plt.show()
+plt.savefig('std_speedup.png')
 plt.clf()

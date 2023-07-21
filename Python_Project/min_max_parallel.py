@@ -1,4 +1,4 @@
-from modules.parallel_scalers.parallelStandardScaler import ParMinMaxScaler
+from modules.parallel_scalers.parallelScalers import ParMinMaxScaler
 
 
 
