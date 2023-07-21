@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
 	t0 = omp_get_wtime();
 	#pragma omp parallel
 	{
-		#pragma omp single
+		#pragma omp single nowait
 		{
 			for (int i=0;i<QUERYELEMS;i++) {
 				#pragma omp task firstprivate(i) private(err)

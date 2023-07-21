@@ -2,6 +2,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <time.h>
+#include <omp.h>
 
 #ifndef PROBDIM
 #define PROBDIM 2
@@ -11,6 +12,9 @@
 
 static double **xdata;
 static double ydata[TRAINELEMS];
+
+static double **xtest;
+static double ytest[QUERYELEMS];
 
 #define MAX_NNB	256
 
@@ -45,7 +49,7 @@ double find_knn_value(double *p, int n, int knn)
 
 int main(int argc, char *argv[])
 {
-	double x[PROBDIM];
+	
 
 	if (argc != 3)
 	{
@@ -58,6 +62,7 @@ int main(int argc, char *argv[])
 
 	double *xmem = (double *)malloc(TRAINELEMS*PROBDIM*sizeof(double));
 	xdata = (double **)malloc(TRAINELEMS*sizeof(double *));
+	// #pragma omp paralel for
 	for (int i = 0; i < TRAINELEMS; i++) xdata[i] = xmem + i*PROBDIM; //&mem[i*PROBDIM];
 
 	FILE *fpin = open_traindata(trainfile);
@@ -82,37 +87,51 @@ int main(int argc, char *argv[])
 	double t0, t1, t_first = 0.0, t_sum = 0.0;
 	double sse = 0.0;
 	double err, err_sum = 0.0;
+	double x[PROBDIM];
 
-	for (int i=0;i<QUERYELEMS;i++) {	/* requests */
-		for (int k = 0; k < PROBDIM; k++)
-			x[k] = read_nextnum(fpin);
-#if defined(SURROGATES)
-		y[i] = read_nextnum(fpin);
-#else
-		y[i] = 0.0;
-#endif
-		t0 = gettime();
-		double yp = find_knn_value(x, PROBDIM, NNBS);
-		t1 = gettime();
-		t_sum += (t1-t0);
-		if (i == 0) t_first = (t1-t0);
+	double *xmem_test = (double *)malloc(QUERYELEMS*PROBDIM*sizeof(double));
+	xtest = (double **)malloc(QUERYELEMS*sizeof(double *));
 
-		sse += (y[i]-yp)*(y[i]-yp);
+	for (int i = 0; i < QUERYELEMS; i++) xtest[i] = xmem_test + i*PROBDIM; //&mem[i*PROBDIM];
 
-		//for (k = 0; k < PROBDIM; k++)
-		//	fprintf(fpout,"%.5f ", x[k]);
+	for (int i=0;i<QUERYELEMS;i++) {
+			for (int k = 0; k < PROBDIM; k++)
+				xtest[i][k] = read_nextnum(fpin);
+	#if defined(SURROGATES)
+				ytest[i] = read_nextnum(fpin);
+	#else
+				ytest[i] = 0;
+	#endif
+	}
+	fclose(fpin);
 
-		err = 100.0*fabs((yp-y[i])/y[i]);
-		//fprintf(fpout,"%.5f %.5f %.2f\n", y[i], yp, err);
+
+// 	for (int i=0;i<QUERYELEMS;i++) {	/* requests */
+// 		for (int k = 0; k < PROBDIM; k++)
+// 			x[k] = read_nextnum(fpin);
+// #if defined(SURROGATES)
+// 		y[i] = read_nextnum(fpin);
+// #else
+// 		y[i] = 0.0;
+// #endif
+
+	t0 = omp_get_wtime();
+	#pragma omp parallel for private(t0,t1,err) reduction(+:t_sum,sse,err_sum)
+	for (int i=0;i<QUERYELEMS;i++) {
+		double yp = find_knn_value(xtest[i], PROBDIM, NNBS);
+		sse += (ytest[i]-yp)*(ytest[i]-yp);
+		err = 100.0*fabs((yp-ytest[i])/ytest[i]);
 		err_sum += err;
 
 	}
-	fclose(fpin);
+	t1 = omp_get_wtime();
+	t_sum = (t1-t0);
+	// fclose(fpin);
 	//fclose(fpout);
 
 	double mse = sse/QUERYELEMS;
-	double ymean = compute_mean(y, QUERYELEMS);
-	double var = compute_var(y, QUERYELEMS, ymean);
+	double ymean = compute_mean(ytest, QUERYELEMS);
+	double var = compute_var(ytest, QUERYELEMS, ymean);
 	double r2 = 1-(mse/var);
 
 	printf("Results for %d query points\n", QUERYELEMS);
@@ -123,9 +142,9 @@ int main(int argc, char *argv[])
 	t_sum = t_sum*1000.0;			// convert to ms
 	t_first = t_first*1000.0;	// convert to ms
 	printf("Total time = %lf ms\n", t_sum);
-	printf("Time for 1st query = %lf ms\n", t_first);
-	printf("Time for 2..N queries = %lf ms\n", t_sum-t_first);
-	printf("Average time/query = %lf ms\n", (t_sum-t_first)/(QUERYELEMS-1));
+	// printf("Time for 1st query = %lf ms\n", t_first);
+	// printf("Time for 2..N queries = %lf ms\n", t_sum-t_first);
+	printf("Average time/query = %lf ms\n", (t_sum)/(QUERYELEMS));
 
 	return 0;
 }

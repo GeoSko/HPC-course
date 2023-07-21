@@ -289,10 +289,7 @@ double predict_value(int dim, int knn, double *xdata, double *ydata, double *poi
 	int i;
 	double sum_v = 0.0;
 	double sum_d = 0.0;
-	// plain mean (other possible options: inverse distance weight, closest value inheritance)
-	// TODO: implement inverse distance weight
 	for (i = 0; i < knn; i++) {
-		
 		sum_v += ydata[i]/dist[i];
 		sum_d += 1/dist[i];
 	}
@@ -300,3 +297,4 @@ double predict_value(int dim, int knn, double *xdata, double *ydata, double *poi
 	return sum_v/sum_d;
 }
 
+	

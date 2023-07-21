@@ -9,9 +9,9 @@ HIGH ?= 2
 
 CFLAGS  = -DPROBDIM=$(DIM) -DNNBS=$(KNN) -DTRAINELEMS=$(TRA) -DQUERYELEMS=$(QUE) -DLB=$(LOW) -DUB=$(HIGH) -O3 #-g -ggdb 
 CFLAGS += -DSURROGATES -Wall -fopenmp
-LDFLAGS += -lm -fopenmp
+LDFLAGS += -lm -fopenmp -pg
 
-all: gendata myknn myknn_tasks myknn_mpi
+all: gendata myknn myknn_parallel myknn_tasks myknn_mpi
 
 gendata: gendata.o
 	gcc -o gendata gendata.o $(LDFLAGS)
@@ -24,6 +24,12 @@ myknn: myknn.o
 
 myknn.o: myknn.c func.c
 	gcc $(CFLAGS) -c myknn.c
+
+myknn_parallel: myknn_parallel.o
+	gcc -o myknn_parallel myknn_parallel.o $(LDFLAGS)
+
+myknn_parallel.o: myknn_parallel.c func.c
+	gcc $(CFLAGS) -c myknn_parallel.c
 
 myknn_tasks: myknn_tasks.o
 	gcc -o myknn_tasks myknn_tasks.o $(LDFLAGS)
@@ -38,6 +44,6 @@ myknn_mpi.o: myknn_mpi.c func.c
 	mpicc $(CFLAGS) -c myknn_mpi.c
 
 clean:
-	rm -f myknn myknn_tasks myknn_mpi *.o gendata
+	rm -f myknn myknn_parallel myknn_tasks myknn_mpi *.o gendata
 
 	
