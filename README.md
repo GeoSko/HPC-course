@@ -1,3 +1,3 @@
 # HPC-course
 
-Projects from HPC course
+Projects from High Performance Computing course
